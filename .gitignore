@@ -1,0 +1,18 @@
+# ENV
+.venv/
+flood_env/
+
+# CACHE
+cache/
+tile_cache/
+
+# DATA & MODELS
+data/
+model/
+
+# PYTHON
+__pycache__/
+*.pyc
+
+# MAC
+.DS_Store
