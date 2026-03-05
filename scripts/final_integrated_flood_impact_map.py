@@ -18,11 +18,23 @@ from matplotlib.colors import ListedColormap
 ctx.set_cache_dir("tile_cache")
 
 # ==============================
+# ==============================
 # FILE PATHS
 # ==============================
-flood_path = "vj_final_prediction.tif"
-roads_path = "gis_osm_roads_free_1.shp"
-water_path = "gis_osm_waterways_free_1.shp"   # 🌊 NEW
+
+# ==============================
+# FILE PATHS
+# ==============================
+
+# ==============================
+# FILE PATHS
+# ==============================
+
+flood_path = "outputs/vj_flood_risk_classes.tif"
+
+roads_path = "gis/gis_osm_roads_free_1.shp"
+
+water_path = "gis/gis_osm_waterways_free_1.shp"
 
 # ==============================
 # REPROJECT FLOOD → EPSG:3857

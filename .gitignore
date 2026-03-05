@@ -15,4 +15,16 @@ __pycache__/
 *.pyc
 
 # MAC
-.DS_Store
+.DS_Store# Large output files
+outputs/*.tif
+outputs/*.tif.aux.xml
+final_flood_impact_map.png
+
+# GIS data (too large for git — store separately)
+gis/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+tile_cache/
