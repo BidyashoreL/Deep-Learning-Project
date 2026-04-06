@@ -92,24 +92,6 @@ class ConvBlock(nn.Module):
 # Transformer Block (Global Context Module at bottleneck)
 # ------------------------------------------------------------------
 
-class PositionalEncoding2D(nn.Module):
-    """Learnable 2-D positional embedding added to the token sequence.
-
-    Uses separate row- and column-embeddings of size d_model // 2 each
-    to create a grid embedding with O(H + W) parameters instead of O(H*W).
-    This keeps memory modest while still encoding absolute spatial position.
-    """
-    def __init__(self, d_model: int, max_h: int = 32, max_w: int = 32):
-        super().__init__()
-        assert d_model % 2 == 0, "d_model must be even for 2-D positional encoding"
-        half = d_model // 2
-        self.row_embed = nn.Embedding(max_h, half)
-        self.col_embed = nn.Embedding(max_w, half)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """x: (B, N, d_model) where N = H * W."""
-        # Infer H, W from the number of tokens -- passed via context in TransformerBlock
-        return x  # positional bias is added in TransformerBlock.forward
 
 
 class TransformerBlock(nn.Module):
@@ -299,7 +281,7 @@ class DecoderBlock(nn.Module):
         super().__init__()
         self.up   = nn.ConvTranspose2d(in_ch, out_ch, kernel_size=2, stride=2)
         self.gate = RFAttentionGate(F_g=out_ch, F_l=skip_ch,
-                                    F_int=max(out_ch // 2, 1), rf_dim=rf_dim)
+                                    F_int=max(out_ch // 2, 8), rf_dim=rf_dim)
         self.conv = ConvBlock(out_ch + skip_ch, out_ch)
 
     def forward(
@@ -455,10 +437,14 @@ class RFATUNet(nn.Module):
         self.bottleneck = ConvBlock(b * 16, b * 32)
 
         # ---- Transformer (global context module) ----
-        # Number of heads must divide b*32; fall back to 1 if needed
-        actual_heads = tf_heads if (b * 32) % tf_heads == 0 else 1
+        # Find the largest valid head count that evenly divides the channel dim
+        bottleneck_ch = b * 32
+        actual_heads = next(
+            (h for h in range(tf_heads, 0, -1) if bottleneck_ch % h == 0),
+            1,
+        )
         self.transformer = TransformerBlock(
-            channels=b * 32,
+            channels=bottleneck_ch,
             num_heads=actual_heads,
             num_layers=tf_layers,
             max_hw=tf_max_hw,
@@ -849,13 +835,12 @@ def predict(
                 t = torch.tensor(patch, dtype=torch.float32).unsqueeze(0).to(device)
 
                 logits, att_maps = model(t, rf_imp)
-                probs  = F.softmax(logits, dim=1).squeeze(0).cpu().numpy()
-                att_s1 = att_maps['stage1'].squeeze().cpu().numpy()   # (H', W')
+                probs = F.softmax(logits, dim=1).squeeze(0).cpu().numpy()
 
                 pred_acc[:, y0:y0+patch_size, x0:x0+patch_size] += probs
                 count[y0:y0+patch_size, x0:x0+patch_size]        += 1
 
-                # Resize attention to patch size for accumulation
+                # Resize stage-1 attention to patch size for accumulation
                 att_s1_full = np.array(
                     F.interpolate(
                         att_maps['stage1'],

@@ -123,7 +123,7 @@ class DecoderBlock(nn.Module):
     def __init__(self, in_ch, skip_ch, out_ch, rf_dim=5):
         super().__init__()
         self.up    = nn.ConvTranspose2d(in_ch, out_ch, kernel_size=2, stride=2)
-        self.gate  = RFAttentionGate(F_g=out_ch, F_l=skip_ch, F_int=out_ch // 2, rf_dim=rf_dim)
+        self.gate  = RFAttentionGate(F_g=out_ch, F_l=skip_ch, F_int=max(out_ch // 2, 8), rf_dim=rf_dim)
         self.conv  = ConvBlock(out_ch + skip_ch, out_ch)
 
     def forward(self, x, skip, rf_importance):
@@ -222,7 +222,7 @@ class RFAttentionUNet(nn.Module):
         self.pool = nn.MaxPool2d(2)
 
         # Bottleneck
-        self.bottleneck = ConvBlock(b*8, b*16)       # -> (B, 1024, H/16, W/16)
+        self.bottleneck = ConvBlock(b*8, b*16)       # -> (B, b*16, H/16, W/16)
 
         # Decoder (with RF-attention gates)
         self.dec4 = DecoderBlock(b*16, b*8,  b*8,  rf_dim)
