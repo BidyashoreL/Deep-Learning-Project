@@ -12,7 +12,7 @@ __pycache__/
 *.pyo
 
 # =========================
-# DATA & MODELS
+# DATA & MODELS (LARGE FILES)
 # =========================
 data/
 model/
@@ -21,12 +21,14 @@ gis/
 # =========================
 # OUTPUT FILES
 # =========================
-outputs/
+outputs/*
+!outputs/*.png
+
+# Ignore heavy raster/model files
 *.tif
 *.tif.aux.xml
 *.npy
 *.pth
-*.png
 
 # =========================
 # CACHE
