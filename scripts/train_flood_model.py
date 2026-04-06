@@ -6,7 +6,7 @@ from tensorflow.keras import layers, models
 BASE_DIR = "/Users/bidyashorelourembam/Deep learning_ Project"
 
 # LOAD DATA
-X = np.load(os.path.join(BASE_DIR, "vj_cnn_input.npy"))[:668, :692, :]
+X = np.load(os.path.join(BASE_DIR, "data", "vj_cnn_input.npy"))[:668, :692, :]
 
 # IMPROVED TRAINING LABEL LOGIC
 Y = np.where(
@@ -46,6 +46,6 @@ Y_train = np.expand_dims(Y, axis=0)
 print("🚀 Training 5-channel flood model...")
 model.fit(X_train, Y_train, epochs=25)
 
-model.save(os.path.join(BASE_DIR, "vj_flood_cnn.h5"))
+model.save(os.path.join(BASE_DIR, "model", "vj_flood_cnn.h5"))
 
 print("✅ 5-channel model trained & saved")

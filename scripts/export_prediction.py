@@ -5,10 +5,10 @@ from tensorflow.keras.models import load_model
 
 # 1. SETUP ABSOLUTE PATHS
 BASE_DIR = "/Users/bidyashorelourembam/Deep learning_ Project"
-model_path = os.path.join(BASE_DIR, "vj_flood_cnn.h5")
-data_path = os.path.join(BASE_DIR, "vj_cnn_input.npy")
-dem_path = os.path.join(BASE_DIR, "vijayawada_dem.tif")
-output_path = os.path.join(BASE_DIR, "vj_final_prediction.tif")
+model_path = os.path.join(BASE_DIR, "model", "vj_flood_cnn.h5")
+data_path = os.path.join(BASE_DIR, "data", "vj_cnn_input.npy")
+dem_path = os.path.join(BASE_DIR, "data", "vijayawada_dem.tif")
+output_path = os.path.join(BASE_DIR, "outputs", "vj_final_prediction.tif")
 
 # 2. LOAD MODEL AND DATA
 print(f"🔄 Loading model from: {model_path}")

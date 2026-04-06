@@ -3,8 +3,8 @@ import numpy as np
 import os
 
 BASE_DIR = "/Users/bidyashorelourembam/Deep learning_ Project"
-flood_path = os.path.join(BASE_DIR, "vj_final_prediction.tif")
-out_path   = os.path.join(BASE_DIR, "vj_flood_risk_classes.tif")
+flood_path = os.path.join(BASE_DIR, "outputs", "vj_final_prediction.tif")
+out_path   = os.path.join(BASE_DIR, "outputs", "vj_flood_risk_classes.tif")
 
 with rasterio.open(flood_path) as src:
     flood = src.read(1)
