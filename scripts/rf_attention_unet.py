@@ -293,6 +293,8 @@ class RFAttentionLoss(nn.Module):
 
     def dice_loss(self, pred, target):
         pred   = F.softmax(pred, dim=1)
+        # Clamp target to valid class range to guard against any residual nodata values
+        target = target.clamp(0, self.nc - 1)
         target_oh = F.one_hot(target, self.nc).permute(0,3,1,2).float()
         inter  = (pred * target_oh).sum(dim=(2,3))
         union  = pred.sum(dim=(2,3)) + target_oh.sum(dim=(2,3))
@@ -544,6 +546,12 @@ if __name__ == "__main__":
 
     with rasterio.open(LABEL_PATH) as src:
         label_np = src.read(1).astype(np.int64)     # (H, W)
+
+    # Warn if label contains values outside {0,1,2}
+    unique_labels = np.unique(label_np)
+    invalid_labels = unique_labels[~np.isin(unique_labels, [0, 1, 2])]
+    if len(invalid_labels) > 0:
+        print(f"Warning: label.tif contains unexpected values {invalid_labels} -- they will be excluded from RF training.")
 
     # Normalize each channel independently
     for c in range(image_np.shape[0]):
