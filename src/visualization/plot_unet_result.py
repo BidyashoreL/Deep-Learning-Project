@@ -57,7 +57,8 @@ def reproject_to_3857(path):
 flood_path = OUTPUTS_DIR / "unet_flood_prediction.tif"
 if not flood_path.exists():
     raise FileNotFoundError(
-        f"Run prediction first: {flood_path} not found"
+        f"Flood prediction file not found at {flood_path}. "
+        "Please run the UNet prediction script first."
     )
 flood_data, flood_transform, flood_bounds_3857 = reproject_to_3857(flood_path)
 print(f"Flood loaded & reprojected: {flood_data.shape}")
