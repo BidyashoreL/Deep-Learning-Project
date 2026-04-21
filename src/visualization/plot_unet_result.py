@@ -17,11 +17,17 @@ import geopandas as gpd
 from shapely.geometry import box as shapely_box
 import contextily as ctx
 import os
+from pathlib import Path
 
 matplotlib.rcParams["font.family"] = "DejaVu Sans"
 matplotlib.rcParams["axes.unicode_minus"] = False
 
-ctx.set_cache_dir("tile_cache")  # cache tiles locally — avoids re-downloading
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = REPO_ROOT / "data"
+OUTPUTS_DIR = REPO_ROOT / "outputs"
+GIS_DIR = REPO_ROOT / "gis"
+
+ctx.set_cache_dir(str(REPO_ROOT / "tile_cache"))  # cache tiles locally — avoids re-downloading
 
 
 # ============================================================
@@ -29,7 +35,7 @@ ctx.set_cache_dir("tile_cache")  # cache tiles locally — avoids re-downloading
 #    (same approach as CNN script — required for ctx basemap)
 # ============================================================
 def reproject_to_3857(path):
-    with rasterio.open(path) as src:
+    with rasterio.open(str(path)) as src:
         transform, width, height = calculate_default_transform(
             src.crs, "EPSG:3857", src.width, src.height, *src.bounds
         )
@@ -48,7 +54,11 @@ def reproject_to_3857(path):
 
 
 # ── UNet flood prediction ──
-flood_path = "outputs/unet_flood_prediction.tif"
+flood_path = OUTPUTS_DIR / "unet_flood_prediction.tif"
+if not flood_path.exists():
+    raise FileNotFoundError(
+        f"Run prediction first: {flood_path} not found"
+    )
 flood_data, flood_transform, flood_bounds_3857 = reproject_to_3857(flood_path)
 print(f"Flood loaded & reprojected: {flood_data.shape}")
 print(f"  Bounds (3857): {[f'{v:.0f}' for v in flood_bounds_3857]}")
@@ -63,7 +73,7 @@ map_extent = [fl, fr, fb, ft]
 # ── LULC (reproject if available) ──
 has_lulc, lulc_data, lulc_transform, lulc_extent = False, None, None, None
 try:
-    lulc_raw, lulc_tf, lulc_bnds = reproject_to_3857("data/vijayawada_lulc.tif")
+    lulc_raw, lulc_tf, lulc_bnds = reproject_to_3857(DATA_DIR / "vijayawada_lulc.tif")
     mn, mx = lulc_raw.min(), lulc_raw.max()
     lulc_data = (lulc_raw - mn) / (mx - mn) if mx != mn else np.ones_like(lulc_raw)
     lulc_transform = lulc_tf
@@ -75,7 +85,7 @@ except Exception as e:
 
 # ── Roads — try both path locations (gis/ and data/) ──
 has_roads, roads_major, roads_minor = False, None, None
-for roads_path in ["gis/gis_osm_roads_free_1.shp", "data/gis_osm_roads_free_1.shp"]:
+for roads_path in [GIS_DIR / "gis_osm_roads_free_1.shp", DATA_DIR / "gis_osm_roads_free_1.shp"]:
     try:
         roads_gdf = gpd.read_file(roads_path).to_crs(3857)
         clip_box = shapely_box(fl, fb, fr, ft)
@@ -102,8 +112,8 @@ if not has_roads:
 # ── Drainage — try both path locations ──
 has_drainage, drainage_gdf = False, None
 for drain_path in [
-    "gis/gis_osm_waterways_free_1.shp",
-    "data/gis_osm_waterways_free_1.shp",
+    GIS_DIR / "gis_osm_waterways_free_1.shp",
+    DATA_DIR / "gis_osm_waterways_free_1.shp",
 ]:
     try:
         drainage_gdf = gpd.read_file(drain_path).to_crs(3857)
@@ -500,9 +510,9 @@ fig.suptitle(
     y=0.975,
 )
 
-os.makedirs("outputs", exist_ok=True)
-out_path = "outputs/flood_analysis_dashboard.png"
-plt.savefig(out_path, dpi=300, bbox_inches="tight", facecolor="white")
+os.makedirs(OUTPUTS_DIR, exist_ok=True)
+out_path = OUTPUTS_DIR / "flood_analysis_dashboard.png"
+plt.savefig(str(out_path), dpi=300, bbox_inches="tight", facecolor="white")
 print(f"\nDashboard saved -> {out_path}")
 
 try:
