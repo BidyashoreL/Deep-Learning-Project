@@ -87,7 +87,7 @@ except Exception as e:
 has_roads, roads_major, roads_minor = False, None, None
 for roads_path in [GIS_DIR / "gis_osm_roads_free_1.shp", DATA_DIR / "gis_osm_roads_free_1.shp"]:
     try:
-        roads_gdf = gpd.read_file(roads_path).to_crs(3857)
+        roads_gdf = gpd.read_file(str(roads_path)).to_crs(3857)
         clip_box = shapely_box(fl, fb, fr, ft)
         roads_gdf = roads_gdf.clip(clip_box)
         if not roads_gdf.empty:
@@ -116,7 +116,7 @@ for drain_path in [
     DATA_DIR / "gis_osm_waterways_free_1.shp",
 ]:
     try:
-        drainage_gdf = gpd.read_file(drain_path).to_crs(3857)
+        drainage_gdf = gpd.read_file(str(drain_path)).to_crs(3857)
         clip_box = shapely_box(fl, fb, fr, ft)
         drainage_gdf = drainage_gdf.clip(clip_box)
         if not drainage_gdf.empty:
